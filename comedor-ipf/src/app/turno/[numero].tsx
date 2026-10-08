@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { Link, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,17 +18,6 @@ export default function TurnoScreen() {
   const fueAtendido = esValido && atendidos.some((pedido) => pedido.numero === idNumerico);
   const posicion = esValido ? posicionEnCola(idNumerico) : -1;
   const enEspera = esValido && !fueAtendido && posicion !== -1;
-
-  const volverAlInicio = () => {
-    // dismissTo (no replace): "/" (el grupo (tabs)) ya está montado más abajo
-    // en el Stack raíz desde que arrancó la app. dismissTo descarta las
-    // pantallas de encima (este /turno, y /confirmar si todavía estuviera)
-    // hasta volver a ESA entrada que ya existe. Si usáramos replace('/'),
-    // en cambio, se apilaría una instancia NUEVA del grupo (tabs) arriba de
-    // la vieja: /turno saldría del historial, pero quedaría un (tabs)
-    // duplicado debajo, en vez de uno solo.
-    router.dismissTo('/');
-  };
 
   return (
     <ThemedView style={styles.container}>
@@ -50,9 +39,22 @@ export default function TurnoScreen() {
 
         {esValido && !fueAtendido && !enEspera && <ThemedText type="title">El turno no existe</ThemedText>}
 
-        <Pressable onPress={volverAlInicio} style={styles.boton}>
-          <ThemedText type="link">Volver al inicio</ThemedText>
-        </Pressable>
+        {/*
+          <Link> (no router.dismissTo imperativo): es un toque directo del
+          usuario sin lógica previa, así que corresponde <Link> según la regla
+          del proyecto. dismissTo (y no replace) porque "/" (el grupo (tabs))
+          ya está montado más abajo en el Stack raíz desde que arrancó la app:
+          dismissTo descarta las pantallas de encima (este /turno, y
+          /confirmar si todavía estuviera) hasta volver a ESA entrada que ya
+          existe. Con replace('/') se apilaría una instancia NUEVA de (tabs)
+          arriba de la vieja: /turno saldría del historial, pero quedaría un
+          (tabs) duplicado debajo, en vez de uno solo.
+        */}
+        <Link href="/" dismissTo asChild>
+          <Pressable style={styles.boton}>
+            <ThemedText type="link">Volver al inicio</ThemedText>
+          </Pressable>
+        </Link>
 
         <DondeEstoy />
       </SafeAreaView>
