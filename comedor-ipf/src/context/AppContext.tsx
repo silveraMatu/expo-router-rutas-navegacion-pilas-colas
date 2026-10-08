@@ -29,6 +29,8 @@ type AppContextValue = {
   agregarAlCarrito: (plato: Plato) => void;
   deshacerUltimo: () => void;
   puedeDeshacer: boolean;
+  /** Tamaño de la pila de deshacer (fines didácticos: cuántos "agregar" se pueden revertir). */
+  tamanioPilaDeshacer: number;
   vaciarCarrito: () => void;
   nota: string;
   setNota: (nota: string) => void;
@@ -70,7 +72,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const colaPedidosRef = useRef(new Cola<Pedido>());
   const pilaAtendidosRef = useRef(new Pila<Pedido>());
 
-  const [puedeDeshacer, setPuedeDeshacer] = useState(false);
+  const [tamanioPilaDeshacer, setTamanioPilaDeshacer] = useState(0);
+  const puedeDeshacer = tamanioPilaDeshacer > 0;
   const [pedidoEnFrente, setPedidoEnFrente] = useState<Pedido | undefined>(undefined);
   const [cantidadEnEspera, setCantidadEnEspera] = useState(0);
   const [atendidos, setAtendidos] = useState<Pedido[]>([]);
@@ -90,7 +93,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const agregarAlCarrito = useCallback((plato: Plato) => {
     pilaDeshacerRef.current.push(plato);
     setItems((prev) => [...prev, plato]);
-    setPuedeDeshacer(!pilaDeshacerRef.current.vacia);
+    setTamanioPilaDeshacer(pilaDeshacerRef.current.tamanio);
   }, []);
 
   const deshacerUltimo = useCallback(() => {
@@ -102,14 +105,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (indice === -1) return prev;
       return [...prev.slice(0, indice), ...prev.slice(indice + 1)];
     });
-    setPuedeDeshacer(!pilaDeshacerRef.current.vacia);
+    setTamanioPilaDeshacer(pilaDeshacerRef.current.tamanio);
   }, []);
 
   const vaciarCarrito = useCallback(() => {
     pilaDeshacerRef.current = new Pila<Plato>();
     setItems([]);
     setNota('');
-    setPuedeDeshacer(false);
+    setTamanioPilaDeshacer(0);
   }, []);
 
   const confirmarPedido = useCallback((): Pedido => {
@@ -127,7 +130,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setContador((n) => n + 1);
     setItems([]);
     setNota('');
-    setPuedeDeshacer(false);
+    setTamanioPilaDeshacer(0);
     setPedidoEnFrente(colaPedidosRef.current.frente());
     setCantidadEnEspera(colaPedidosRef.current.tamanio);
 
@@ -157,6 +160,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     agregarAlCarrito,
     deshacerUltimo,
     puedeDeshacer,
+    tamanioPilaDeshacer,
     vaciarCarrito,
     nota,
     setNota,
